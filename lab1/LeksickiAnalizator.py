@@ -23,6 +23,14 @@ keywords = {
     "az": "KR_AZ"
 }
 
+def separate_num_from_idn(x):
+    if x[0].isnumeric():
+        for i in range(len(x)):
+            if x[i].isalpha():
+                return [x[:i], x[i:]]
+    
+    return [x]
+
 cnt = 0
 
 for line in stdin:
@@ -35,6 +43,8 @@ for line in stdin:
 
     for op in math.keys():
         line = [i for i in flatten([flatten([[j, op] for j in i.split(op)])[:-1] for i in line]) if len(i)]
+
+    line = flatten([separate_num_from_idn(i) for i in line])
 
     for i in line:
         if i in math:
