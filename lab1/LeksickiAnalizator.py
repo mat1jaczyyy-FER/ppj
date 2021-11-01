@@ -13,7 +13,7 @@ math = {
     "*": "OP_PUTA",
     "/": "OP_DIJELI",
     "(": "L_ZAGRADA",
-    ")": "R_ZAGRADA"
+    ")": "D_ZAGRADA"
 }
 
 keywords = {
