@@ -12,6 +12,8 @@ do
 	
 	if $python3 LeksickiAnalizator.py < $i/test.in | diff --strip-trailing-cr $i/test.out -; then
 		echo "OK"
+	elif [[ $* == *--stop* ]]; then
+		break
 	fi
 done
 
