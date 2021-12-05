@@ -10,7 +10,7 @@ for i in test/*/ ;
 do
 	echo "Testing $i"
 	
-	if $python3 SemantickiAnalizator.py < $i/Test.in | diff --strip-trailing-cr $i/Test.out -; then
+	if $python3 SemantickiAnalizator.py < $i/test.in | diff --strip-trailing-cr $i/test.out -; then
 		echo "OK"
 	elif [[ $* == *--stop* ]]; then
 		break
