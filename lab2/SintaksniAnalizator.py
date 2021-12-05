@@ -3,23 +3,28 @@
 
 from sys import stdin, exit
 
-lines = [i.strip() for i in stdin if i.strip()]
-i = 0
+i = ""
 
 def match(*x):
-    global lines, i
-    return any(filter((lines[i] if i < len(lines) else "").startswith, x))
+    global i
+    return any(filter(i.startswith, x))
 
 def must(*x):
-    global lines, i
+    global i
     if not match(x):
-        print("err " + (lines[i] if i < len(lines) else "kraj"))
+        print("err", i)
         exit(0)
 
 def read():
-    global lines, i
-    i += 1
-    return lines[i - 1]
+    global i
+    old = i
+    i = ""
+    while not i:
+        i = next(stdin, "kraj").strip()
+
+    return old
+
+read()
 
 output = []
 level = 0
