@@ -56,4 +56,4 @@ for line in stdin:
         elif i[0].isnumeric():
             op = "BROJ"
         
-        print(f"{op} {cnt} {i}")
+        print(op, cnt, i)
