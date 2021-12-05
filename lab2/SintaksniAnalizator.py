@@ -6,26 +6,20 @@ from sys import stdin, exit
 lines = [i.strip() for i in stdin if i.strip()]
 i = 0
 
-def peek():
-    return 
-
 def match(*x):
     global lines, i
     return any(filter((lines[i] if i < len(lines) else "").startswith, x))
 
 def must(*x):
+    global lines, i
     if not match(x):
-        error()
+        print("err " + (lines[i] if i < len(lines) else "kraj"))
+        exit(0)
 
 def read():
     global lines, i
     i += 1
     return lines[i - 1]
-
-def error():
-    line = lines[i] if i < len(lines) else "kraj"
-    print(f'err {line}')
-    exit(0)
 
 output = []
 level = 0
@@ -149,6 +143,5 @@ push("program")
 lista_naredbi()
 pop()
 
-for i in output:
-    print(i)
-1
+for l in output:
+    print(l)
