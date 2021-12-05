@@ -5,9 +5,13 @@ var sim = require("./friscjs.js").FRISC;
 
 var argv = process.argv;
 var isVerboseMode = argv.indexOf("-v") > -1;
+var isSilentMode = argv.indexOf("-s") > -1;
 
 if (isVerboseMode) {
   argv.splice(argv.indexOf("-v"), 1);
+}
+if (isSilentMode) {
+  argv.splice(argv.indexOf("-s"), 1);
 }
 
 var debug = function(str) {
@@ -31,60 +35,62 @@ if (argv.indexOf("-memsize") > -1) {
   argv.splice(argv.indexOf("-memsize") + 1, 1);
   argv.splice(argv.indexOf("-memsize"), 1);
 }
-
-console.error("");
-console.error("*********************************************************");
-console.error("** FRISCjs - FRISC simulator in JavaScript");
-console.error("** ");
-console.error("** Usage instructions:");
-console.error("** ");
-console.error("**   pass filename argument with the FRISC program:");
-console.error("**     > node main.js filename");
-console.error("**   or input the FRISC program via stdin:");
-console.error("**     > cat filename | node main.js");
-console.error("** ");
-console.error("** Note: the simulator has a memory module of 256KB,");
-console.error("**       i.e. from 0x00000000 to 0x0003FFFF.");
-console.error("** ");
-console.error("** Verbose debugging mode can be turned on by passing");
-console.error("**   specifying the -v flag, e.g.:");
-console.error("** ");
-console.error("**     > node main.js -v filename");
-console.error("**   or");
-console.error("**     > cat filename | node main.js -v");
-console.error("** ");
-console.error("** The CPU frequency (in Hz) can be set with the -cpufreq");
-console.error("**   flag argument (default value is 1000):");
-console.error("** ");
-console.error("**     > node main.js -cpufreq 2 filename");
-console.error("**   or");
-console.error("**     > cat filename | node main.js -cpufreq 2");
-console.error("** ");
-console.error("** Memory size (in number of 1K locations) can be set with");
-console.error("**   the -memsize flag argument (default value is 256):");
-console.error("** ");
-console.error("**     > node main.js -memsize 64 filename");
-console.error("**   or");
-console.error("**     > cat filename | node main.js -memsize 64");
-console.error("** ");
-console.error("** Execution flow:");
-console.error("** ");
-console.error("**   1) compilation of the FRISC program to machine code ");
-console.error("**   2) step-by-step execution of FRISC program ");
-console.error("**      with logging of processor state at each step  ");
-console.error("**      to stderr (if in verbose mode)");
-console.error("**   3) output of r6 to stdout after program execution");
-console.error("** ");
-console.error("** GUI version of FRISC simulator is available at:");
-console.error("** ");
-console.error("**   http://fer-ppj.github.com/FRISCjs/main.html");
-console.error("** ");
-console.error("** Bug reports:");
-console.error("** ");
-console.error("**   mailto:ppj@zemris.fer.hr, or ");
-console.error("**   http://github.com/fer-ppj/FRISCjs/issues");
-console.error("*********************************************************");
-console.error("");
+1
+if (!isSilentMode) {
+  console.error("");
+  console.error("*********************************************************");
+  console.error("** FRISCjs - FRISC simulator in JavaScript");
+  console.error("** ");
+  console.error("** Usage instructions:");
+  console.error("** ");
+  console.error("**   pass filename argument with the FRISC program:");
+  console.error("**     > node main.js filename");
+  console.error("**   or input the FRISC program via stdin:");
+  console.error("**     > cat filename | node main.js");
+  console.error("** ");
+  console.error("** Note: the simulator has a memory module of 256KB,");
+  console.error("**       i.e. from 0x00000000 to 0x0003FFFF.");
+  console.error("** ");
+  console.error("** Verbose debugging mode can be turned on by passing");
+  console.error("**   specifying the -v flag, e.g.:");
+  console.error("** ");
+  console.error("**     > node main.js -v filename");
+  console.error("**   or");
+  console.error("**     > cat filename | node main.js -v");
+  console.error("** ");
+  console.error("** The CPU frequency (in Hz) can be set with the -cpufreq");
+  console.error("**   flag argument (default value is 1000):");
+  console.error("** ");
+  console.error("**     > node main.js -cpufreq 2 filename");
+  console.error("**   or");
+  console.error("**     > cat filename | node main.js -cpufreq 2");
+  console.error("** ");
+  console.error("** Memory size (in number of 1K locations) can be set with");
+  console.error("**   the -memsize flag argument (default value is 256):");
+  console.error("** ");
+  console.error("**     > node main.js -memsize 64 filename");
+  console.error("**   or");
+  console.error("**     > cat filename | node main.js -memsize 64");
+  console.error("** ");
+  console.error("** Execution flow:");
+  console.error("** ");
+  console.error("**   1) compilation of the FRISC program to machine code ");
+  console.error("**   2) step-by-step execution of FRISC program ");
+  console.error("**      with logging of processor state at each step  ");
+  console.error("**      to stderr (if in verbose mode)");
+  console.error("**   3) output of r6 to stdout after program execution");
+  console.error("** ");
+  console.error("** GUI version of FRISC simulator is available at:");
+  console.error("** ");
+  console.error("**   http://fer-ppj.github.com/FRISCjs/main.html");
+  console.error("** ");
+  console.error("** Bug reports:");
+  console.error("** ");
+  console.error("**   mailto:ppj@zemris.fer.hr, or ");
+  console.error("**   http://github.com/fer-ppj/FRISCjs/issues");
+  console.error("*********************************************************");
+  console.error("");
+}
 
 // determine method for acquiring the input program
 if (argv.length > 2) {
@@ -92,12 +98,13 @@ if (argv.length > 2) {
   // program
   var filename = path.normalize(argv[2]);
 
-  console.error("");
-  console.error("*********************************************************");
-  console.error("Reading program from file: " + filename); 
-  console.error("*********************************************************");
-  console.error("");
-
+  if (!isSilentMode) {
+    console.error("");
+    console.error("*********************************************************");
+    console.error("Reading program from file: " + filename); 
+    console.error("*********************************************************");
+    console.error("");
+  }
   if (!(fs.existsSync(filename))) {
     console.error("ERROR: File does not exist!");
     console.log("ERROR");
@@ -155,19 +162,21 @@ function instructionToString(instruction) {
 }
 
 function runProgram(frisc_asmsource) {
-  console.error("");
-  console.error("*********************************************************");
-  console.error("Input FRISC program:");
-  console.error("*********************************************************");
-  console.error("");
+  if (!isSilentMode) {
+    console.error("");
+    console.error("*********************************************************");
+    console.error("Input FRISC program:");
+    console.error("*********************************************************");
+    console.error("");
 
-  console.error(frisc_asmsource.toString());
+    console.error(frisc_asmsource.toString());
 
-  console.error("");
-  console.error("*********************************************************");
-  console.error("Parsing input FRISC program.");
-  console.error("*********************************************************");
-  console.error("");
+    console.error("");
+    console.error("*********************************************************");
+    console.error("Parsing input FRISC program.");
+    console.error("*********************************************************");
+    console.error("");
+  }
 
   try {
     var result = parser.parse(frisc_asmsource.toString());
@@ -181,11 +190,13 @@ function runProgram(frisc_asmsource) {
   simulator.CPU._frequency = cpufreq;
 
   simulator.CPU.onBeforeRun = function() {
-    console.error("");
-    console.error("*********************************************************");
-    console.error("Starting simulation!");
-    console.error("*********************************************************");
-    console.error("");
+    if (!isSilentMode) {
+      console.error("");
+      console.error("*********************************************************");
+      console.error("Starting simulation!");
+      console.error("*********************************************************");
+      console.error("");
+    }
   };
   
   simulator.CPU.onBeforeCycle = function() {
@@ -206,11 +217,13 @@ function runProgram(frisc_asmsource) {
   };
   
   simulator.CPU.onStop = function() {
-    console.error("");
-    console.error("*********************************************************");
-    console.error("FRISC processor stopped! Status of CPU R6: " + simulator.CPU._r.r6);
-    console.error("*********************************************************");
-    console.error("");
+    if (!isSilentMode) {
+      console.error("");
+      console.error("*********************************************************");
+      console.error("FRISC processor stopped! Status of CPU R6: " + simulator.CPU._r.r6);
+      console.error("*********************************************************");
+      console.error("");
+    }
     console.log(simulator.CPU._r.r6);
   };
   

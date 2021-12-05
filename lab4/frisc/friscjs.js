@@ -895,10 +895,10 @@ var FRISC = function() {
         this.onStop();
       }
 
-      throw {
+      /*throw {
         name: "Halting",
         message: "Stop the CPU",
-      };
+      };*/
     },
 
     performCycle: function() {
