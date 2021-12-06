@@ -39,142 +39,118 @@ def offset(x):
     
     error(x)
 
-asoc_pushing = False
-asoc_pushes = [[]]
-asoc_ops = [[]]
-
-loop_levels = []
-loop = []
-write_loop = False
-
-def write_raw(x):
-    global asoc_pushing, asoc_pushes, asoc_ops, loop
-    if len(asoc_pushes) > 1:
-        if asoc_pushing:
-            asoc_pushes[-1].append(x)
-        else:
-            asoc_ops[-1].append(x)
-    elif write_loop:
-        loop[-1].append(x)
-    else:
-        print(x)
+def format(x, l=""):
+    return f"{l}\t{x}"
 
 def write(x, l=""):
-    write_raw(f"{l}\t{x}")
+    print(format(x, l))
 
-write("MOVE 40000, R7")
-write("MOVE 3C000, R5")
+def writemany(x):
+    for i in x:
+        write(i)
 
 def E():
-    global asoc_pushing, asoc_pushes, asoc_ops
-    asoc_pushes.append([])
-
     read()
-    T()
-    asoc_pushes[-1] += asoc_ops[-1]
-    asoc_ops[-1].clear()
+    o = [flatten(T()), []]
 
-    asoc_pushing = False
     read()
     if i.startswith("OP_PLUS"):
         read()
-        E()
-        asoc_ops.append([])
-        write("POP R0")
-        write("POP R1")
-        write("ADD R0, R1, R2")
-        write("PUSH R2")
-        asoc_ops[-2] = asoc_ops[-1] + asoc_ops[-2]
-        del asoc_ops[-1]
+        o[0][0:0], o[1][0:0] = E()
+        o[1][0:0] = [
+            "POP R0",
+            "POP R1",
+            "ADD R0, R1, R2",
+            "PUSH R2"
+        ]
 
     elif i.startswith("OP_MINUS"):
         read()
-        E()
-        asoc_ops.append([])
-        write("POP R0")
-        write("POP R1")
-        write("SUB R0, R1, R2")
-        write("PUSH R2")
-        asoc_ops[-2] = asoc_ops[-1] + asoc_ops[-2]
-        del asoc_ops[-1]
+        o[0][0:0], o[1][0:0] = E()
+        o[1][0:0] = [
+            "POP R0",
+            "POP R1",
+            "SUB R0, R1, R2",
+            "PUSH R2"
+        ]
 
     else:
         read()
-
-    asoc_pushes[-2] = asoc_pushes[-1] + asoc_pushes[-2]
-    del asoc_pushes[-1]
-
-    #print("asoc_pushes", asoc_pushes)
-    #print("asoc_ops", asoc_ops)
+    
+    return o
 
 def T():
-    global asoc_pushing, asoc_pushes, asoc_ops
-    asoc_pushes.append([])
-
     read()
-    P()
+    o = [P(), []]
 
-    asoc_pushing = False
     read()
     if i.startswith("OP_PUTA"):
         read()
-        T()
-        asoc_ops.append([])
-        write("CALL MUL")
-        asoc_ops[-2] = asoc_ops[-1] + asoc_ops[-2]
-        del asoc_ops[-1]
+        o[0][0:0], o[1][0:0] = T()
+        o[1][0:0] = [
+            "CALL MUL"
+        ]
 
     elif i.startswith("OP_DIJELI"):
         read()
-        T()
-        asoc_ops.append([])
-        write("LOAD R0, (R7)")
-        write("LOAD R1, (R7 + 4)")
-        write("STORE R0, (R7 + 4)")
-        write("STORE R1, (R7)")
-        write("CALL DIV")
-        asoc_ops[-2] = asoc_ops[-1] + asoc_ops[-2]
-        del asoc_ops[-1]
+        o[0][0:0], o[1][0:0] = T()
+        o[1][0:0] = [
+            "LOAD R0, (R7)",
+            "LOAD R1, (R7 + 4)",
+            "STORE R0, (R7 + 4)",
+            "STORE R1, (R7)",
+            "CALL DIV"
+        ]
 
     else:
         read()
-
-    asoc_pushes[-2] = asoc_pushes[-1] + asoc_pushes[-2]
-    del asoc_pushes[-1]
-
-    #print("asoc_pushes", asoc_pushes)
-    #print("asoc_ops", asoc_ops)
+    
+    return o
 
 def P():
-    global asoc_pushing
+    o = []
     read()
 
     if i.startswith("BROJ"):
-        asoc_pushing = True
-        write(f"MOVE %D {i.split()[2]}, R0")
-        write(f"PUSH R0")
+        o.extend([
+            f"MOVE %D {i.split()[2]}, R0",
+            "PUSH R0"
+        ])
         read()
     
     elif i.startswith("IDN"):
-        asoc_pushing = True
-        write(f"LOAD R0, {offset(i.split()[1:3])}")
-        write(f"PUSH R0")
+        o.extend([
+            f"LOAD R0, {offset(i.split()[1:3])}",
+            "PUSH R0"
+        ])
         read()
 
     elif i.startswith("OP_PLUS"):
         read()
-        P()
+        o.extend(P())
 
     elif i.startswith("OP_MINUS"):
         read()
-        P()
-        write(f"POP R0")
-        write(f"MOVE 0, R1")
-        write(f"SUB R1, R0, R0")
-        write(f"PUSH R0")
-    
+        o.extend(P())
+        o.extend([
+            "POP R0",
+            "MOVE 0, R1",
+            "SUB R1, R0, R0",
+            "PUSH R0"
+        ])
+
     elif i.startswith("L_ZAGRADA"):
         ...
+    
+    return o
+    
+loop_levels = []
+loops = []
+
+writemany([
+    "MOVE 40000, R7",
+    "MOVE 3C000, R5"
+])
 
 while True:
     if i == "kraj":
@@ -193,19 +169,13 @@ while True:
             
             read()
             read()
-            E()
 
-            for o in asoc_pushes[0]:
-                write_raw(o)
+            writemany(flatten(E()))
 
-            for o in asoc_ops[0]:
-                write_raw(o)
-
-            asoc_pushes[0].clear()
-            asoc_ops[0].clear()
-
-            write("POP R0")
-            write(f"STORE R0, {offset(var)}")
+            writemany([
+                "POP R0",
+                f"STORE R0, {offset(var)}"
+            ])
         
         elif prev.startswith("KR_ZA"):
             vars.append([])
@@ -213,61 +183,52 @@ while True:
 
             read()
             read()
-            E()
 
-            for o in asoc_pushes[0]:
-                write_raw(o)
+            for o in flatten(E()):
+                write(o)
 
-            for o in asoc_ops[0]:
-                write_raw(o)
+            writemany([
+                "POP R0",
+                f"STORE R0, {offset(var)}"
+            ])
 
-            asoc_pushes[0].clear()
-            asoc_ops[0].clear()
+            write("", f"L{len(loops)}")
 
-            write("POP R0")
-            write(f"STORE R0, {offset(var)}")
-
-            write("", f"L{len(loop)}")
-            loop_levels.append(len(loop))
-            loop.append([])
-            write_loop = True
-
-            write(f"LOAD R0, {offset(var)}")
-            write("ADD R0, 1, R0")
-            write(f"STORE R0, {offset(var)}")
+            loop = []
+            loop.extend([
+                f"LOAD R0, {offset(var)}",
+                "ADD R0, 1, R0",
+                f"STORE R0, {offset(var)}"
+            ])
 
             read()
-            E()
+            loop.extend(flatten(E()))
 
-            for o in asoc_pushes[0]:
-                write_raw(o)
+            loop.extend([
+                f"LOAD R0, {offset(var)}",
+                "POP R1",
+                "CMP R0, R1",
+                f"JP_SLE L{len(loops)}"
+            ])
 
-            for o in asoc_ops[0]:
-                write_raw(o)
-
-            asoc_pushes[0].clear()
-            asoc_ops[0].clear()
-
-            write(f"LOAD R0, {offset(var)}")
-            write("POP R1")
-            write("CMP R0, R1")
-            write(f"JP_SLE L{len(loop) - 1}")
-
-            write_loop = False
+            loop_levels.append(len(loops))
+            loops.append(loop)
 
     elif prev.startswith("KR_AZ"):
-        for o in loop[loop_levels[-1]]:
-            write_raw(o)
-        
+        writemany(loops[loop_levels[-1]])
         del loop_levels[-1]
+
         read()
 
     else:
         read()
 
-write("LOAD R6, (R5)")
-write("HALT")
+writemany([
+    "LOAD R6, (R5)",
+    "HALT"
+])
 
+# multiplication algorithm
 write("MOVE 0, R6", "MD_SGN")
 write("XOR R0, 0, R0")
 write("JP_P MD_TST1")
