@@ -21,6 +21,10 @@ def read():
 read()
 read()
 
+def match(x):
+    global i
+    return any(filter(i.startswith, x))
+
 def error(x):
     print("err", x[0], x[1])
     exit(0)
@@ -54,23 +58,18 @@ def E():
     o = [flatten(T()), []]
 
     read()
-    if i.startswith("OP_PLUS"):
+    d = {
+        "OP_PLUS": "ADD",
+        "OP_MINUS": "SUB"
+    }
+    if match(d.keys()):
+        op = d[i.split()[0]]
         read()
         o[0][0:0], o[1][0:0] = E()
         o[1][0:0] = [
-            "POP R0",
-            "POP R1",
-            "ADD R0, R1, R2",
-            "PUSH R2"
-        ]
-
-    elif i.startswith("OP_MINUS"):
-        read()
-        o[0][0:0], o[1][0:0] = E()
-        o[1][0:0] = [
-            "POP R0",
-            "POP R1",
-            "SUB R0, R1, R2",
+            "POP R0", # zamijenjene R0 i R1
+            "POP R1", # radi asocijativnosti
+            f"{op} R0, R1, R2",
             "PUSH R2"
         ]
 
@@ -79,28 +78,29 @@ def E():
     
     return o
 
+md_used = {
+    "MUL": False,
+    "DIV": False
+}
+
 def T():
+    global mul_used, div_used
     read()
     o = [P(), []]
 
     read()
-    if i.startswith("OP_PUTA"):
+    d = {
+        "OP_PUTA": "MUL",
+        "OP_DIJELI": "DIV"
+    }
+    if match(d.keys()):
+        op = d[i.split()[0]]
         read()
         o[0][0:0], o[1][0:0] = T()
         o[1][0:0] = [
-            "CALL MUL"
+            f"CALL {op}"
         ]
-
-    elif i.startswith("OP_DIJELI"):
-        read()
-        o[0][0:0], o[1][0:0] = T()
-        o[1][0:0] = [
-            "LOAD R0, (R7)",
-            "LOAD R1, (R7 + 4)",
-            "STORE R0, (R7 + 4)",
-            "STORE R1, (R7)",
-            "CALL DIV"
-        ]
+        md_used[op] = True
 
     else:
         read()
@@ -145,7 +145,18 @@ def P():
         read()
     
     return o
-    
+
+def assignment():
+    read()
+    read()
+
+    writemany(flatten(E()))
+
+    writemany([
+        "POP R0",
+        f"STORE R0, {offset(var)}"
+    ])
+
 loop_levels = []
 loops = []
 
@@ -169,30 +180,13 @@ while True:
             if not any(var_filter(var)):
                 vars[-1].append(var)
             
-            read()
-            read()
-
-            writemany(flatten(E()))
-
-            writemany([
-                "POP R0",
-                f"STORE R0, {offset(var)}"
-            ])
+            assignment()
         
         elif prev.startswith("KR_ZA"):
             vars.append([])
             vars[-1].append(var)
 
-            read()
-            read()
-
-            for o in flatten(E()):
-                write(o)
-
-            writemany([
-                "POP R0",
-                f"STORE R0, {offset(var)}"
-            ])
+            assignment()
 
             write("", f"L{len(loops)}")
 
@@ -230,55 +224,57 @@ writemany([
     "HALT"
 ])
 
-# multiplication algorithm
-write("MOVE 0, R6", "MD_SGN")
-write("XOR R0, 0, R0")
-write("JP_P MD_TST1")
-write("XOR R0, -1, R0")
-write("ADD R0, 1, R0")
-write("MOVE 1, R6")
-write("XOR R1, 0, R1", "MD_TST1")
-write("JP_P MD_SGNR")
-write("XOR R1, -1, R1")
-write("ADD R1, 1, R1")
-write("XOR R6, 1, R6")
-write("RET", "MD_SGNR")
+if md_used["MUL"] or md_used["DIV"]:
+    write("MOVE 0, R6", "MD_SGN")
+    write("XOR R0, 0, R0")
+    write("JP_P MD_TST1")
+    write("XOR R0, -1, R0")
+    write("ADD R0, 1, R0")
+    write("MOVE 1, R6")
+    write("XOR R1, 0, R1", "MD_TST1")
+    write("JP_P MD_SGNR")
+    write("XOR R1, -1, R1")
+    write("ADD R1, 1, R1")
+    write("XOR R6, 1, R6")
+    write("RET", "MD_SGNR")
 
-write("POP R4", "MD_INIT")
-write("POP R3")
-write("POP R1")
-write("POP R0")
-write("CALL MD_SGN")
-write("MOVE 0, R2")
-write("PUSH R4")
-write("RET")
+    write("POP R4", "MD_INIT")
+    write("POP R3")
+    write("POP R0") # zamijenjene R0 i R1
+    write("POP R1") # radi asocijativnosti
+    write("CALL MD_SGN")
+    write("MOVE 0, R2")
+    write("PUSH R4")
+    write("RET")
 
-write("XOR R6, 0, R6", "MD_RET")
-write("JP_Z MD_RET1")
-write("XOR R2, -1, R2")
-write("ADD R2, 1, R2")
-write("POP R4", "MD_RET1")
-write("PUSH R2")
-write("PUSH R3")
-write("PUSH R4")
-write("RET")
+    write("XOR R6, 0, R6", "MD_RET")
+    write("JP_Z MD_RET1")
+    write("XOR R2, -1, R2")
+    write("ADD R2, 1, R2")
+    write("POP R4", "MD_RET1")
+    write("PUSH R2")
+    write("PUSH R3")
+    write("PUSH R4")
+    write("RET")
 
-write("CALL MD_INIT", "MUL")
-write("XOR R1, 0, R1")
-write("JP_Z MUL_RET")
-write("SUB R1, 1, R1")
-write("ADD R2, R0, R2", "MUL_1")
-write("SUB R1, 1, R1")
-write("JP_NN MUL_1")
-write("CALL MD_RET", "MUL_RET")
-write("RET")
+if md_used["MUL"]:
+    write("CALL MD_INIT", "MUL")
+    write("XOR R1, 0, R1")
+    write("JP_Z MUL_RET")
+    write("SUB R1, 1, R1")
+    write("ADD R2, R0, R2", "MUL_1")
+    write("SUB R1, 1, R1")
+    write("JP_NN MUL_1")
+    write("CALL MD_RET", "MUL_RET")
+    write("RET")
 
-write("CALL MD_INIT", "DIV")
-write("XOR R1, 0, R1")
-write("JP_Z DIV_RET")
-write("ADD R2, 1, R2", "DIV_1")
-write("SUB R0, R1, R0")
-write("JP_NN DIV_1")
-write("SUB R2, 1, R2")
-write("CALL MD_RET", "DIV_RET")
-write("RET")
+if md_used["DIV"]:
+    write("CALL MD_INIT", "DIV")
+    write("XOR R1, 0, R1")
+    write("JP_Z DIV_RET")
+    write("ADD R2, 1, R2", "DIV_1")
+    write("SUB R0, R1, R0")
+    write("JP_NN DIV_1")
+    write("SUB R2, 1, R2")
+    write("CALL MD_RET", "DIV_RET")
+    write("RET")
