@@ -140,7 +140,9 @@ def P():
         ])
 
     elif i.startswith("L_ZAGRADA"):
-        ...
+        read()
+        o.extend(flatten(E()))
+        read()
     
     return o
     
