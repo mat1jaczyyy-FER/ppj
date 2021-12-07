@@ -84,7 +84,7 @@ md_used = {
 }
 
 def T():
-    global mul_used, div_used
+    global md_used
     read()
     o = [P(), []]
 
