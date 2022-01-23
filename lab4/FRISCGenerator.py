@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # Dominik Matijaca 0036524568
 
+frisc = open("a.frisc", "w")
+
 def flatten(x):
     return sum(x, [])
 
@@ -43,11 +45,8 @@ def offset(x):
     
     error(x)
 
-def format(x, l=""):
-    return f"{l}\t{x}"
-
 def write(x, l=""):
-    print(format(x, l))
+    frisc.write(f"{l}\t{x}\n")
 
 def writemany(x):
     for i in x:
@@ -278,3 +277,5 @@ if md_used["DIV"]:
     write("SUB R2, 1, R2")
     write("CALL MD_RET", "DIV_RET")
     write("RET")
+
+frisc.close()

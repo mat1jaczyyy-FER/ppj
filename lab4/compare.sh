@@ -12,10 +12,10 @@ for i in test/*/ ;
 do
 	echo "Testing $i"
 	
-	if $python3 FRISCGenerator.py < $i/test.in > temp.frisc; then
+	if $python3 FRISCGenerator.py < $i/test.in; then
 		echo " FRISCGenerator compiled"
 
-		if $node frisc/main.js -s -cpufreq 20000 temp.frisc | diff --strip-trailing-cr $i/test.out -; then
+		if $node frisc/main.js -s -cpufreq 20000 a.frisc | diff --strip-trailing-cr $i/test.out -; then
 			echo " R6 output OK"
 		else
 			echo " R6 error"
@@ -31,4 +31,4 @@ do
 	fi
 done
 
-rm -f temp.frisc
+rm -f a.frisc
